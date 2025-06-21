@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, getDoc, query, where, getDocs, writeBatch } from 'firebase/firestore';
-import { Target, DollarSign, BrainCircuit, Shield, BookOpen, Edit, Trash2, Plus, MoreVertical, X, Check, Save, FileDown, Play, Pause, RotateCcw, TrendingUp, Menu, Settings } from 'lucide-react';
+import { getAuth, signInAnonymously, onAuthStateChanged } from 'firebase/auth';
+import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc, setDoc, getDoc, query, getDocs, writeBatch } from 'firebase/firestore';
+import { Target, BrainCircuit, BookOpen, Edit, Trash2, Plus, X, Check, Save, FileDown, Play, Pause, RotateCcw, TrendingUp, Menu, Settings } from 'lucide-react';
 
 // --- Firebase Configuration ---
-// This part is correct because you have pasted your personal keys here.
+// Make sure you replace this with your actual Firebase config keys.
 const firebaseConfig = {
   apiKey: "AIzaSyCycH-7M8-gVS3frGL_NRyU74nFkQ8tnjw",
   authDomain: "polymath-os-app.firebaseapp.com",
@@ -14,7 +14,6 @@ const firebaseConfig = {
   messagingSenderId: "630169596916",
   appId: "1:630169596916:web:e6cb20d7dfef1f95693fa1"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -35,6 +34,7 @@ export default function App() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 setUserId(user.uid);
+                setIsAuthReady(true);
             } else {
                 try {
                     // In the deployed app, we will always sign in anonymously.
@@ -43,7 +43,6 @@ export default function App() {
                     console.error("Anonymous Authentication Error:", error);
                 }
             }
-            setIsAuthReady(true);
         });
         return () => unsubscribe();
     }, []);
@@ -169,14 +168,12 @@ function Dashboard({ userId }) {
     const [newTaskText, setNewTaskText] = useState('');
     const [newTaskCadence, setNewTaskCadence] = useState('Daily');
     
-    const playPing = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg-");
+    const playPing = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
 
     const tasksCollection = collection(db, 'artifacts', appId, 'users', userId, 'tasks');
 
     useEffect(() => {
        if (!userId) return;
-
-        // Function to reset tasks based on their cadence
         const resetTasks = async () => {
             const now = new Date();
             const date = now.getDate();
@@ -193,35 +190,25 @@ function Dashboard({ userId }) {
                 const lastReset = task.lastReset ? task.lastReset.toDate() : new Date(0);
                 let shouldReset = false;
                 
-                // Set time to beginning of the day for accurate date comparison
                 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
                 const lastResetStart = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate()).getTime();
 
-                const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay(); // Monday = 1, Sunday = 7
+                const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
 
                 switch (task.cadence) {
                     case 'Daily':
-                        if (todayStart > lastResetStart) {
-                           shouldReset = true;
-                        }
+                        if (todayStart > lastResetStart) { shouldReset = true; }
                         break;
                     case 'Weekly':
-                         // Reset on Mondays
-                        if (dayOfWeek === 1 && todayStart > lastResetStart) {
-                           shouldReset = true;
-                        }
+                        if (dayOfWeek === 1 && todayStart > lastResetStart) { shouldReset = true; }
                         break;
                      case 'Bi-Weekly':
                         const diffTime = Math.abs(nowTime - lastReset.getTime());
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        if (dayOfWeek === 1 && diffDays >= 14) {
-                             shouldReset = true;
-                        }
+                        if (dayOfWeek === 1 && diffDays >= 14) { shouldReset = true; }
                         break;
                     case 'Monthly':
-                         if (date === 1 && todayStart > lastResetStart) {
-                             shouldReset = true;
-                        }
+                         if (date === 1 && todayStart > lastResetStart) { shouldReset = true; }
                         break;
                     default:
                         break;
@@ -236,13 +223,11 @@ function Dashboard({ userId }) {
 
             if (needsUpdate) {
                 await batch.commit();
-                console.log("Tasks have been reset.");
             }
         };
         
         resetTasks();
 
-        // Set up the listener for tasks
         const q = query(tasksCollection);
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -250,7 +235,7 @@ function Dashboard({ userId }) {
         });
 
         return () => unsubscribe();
-    }, [userId]);
+    }, [userId, tasksCollection]);
 
     const handleAddTask = async (e) => {
         e.preventDefault();
@@ -363,24 +348,24 @@ function Dashboard({ userId }) {
 
 // --- 2. Goals & Milestones Component ---
 function Goals({ userId }) {
-    const [goals, setGoals] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [currentGoal, setCurrentGoal] = useState(null); // for editing goal title
-    
-    const goalsCollection = collection(db, 'artifacts', appId, 'users', userId, 'goals');
-    
-    const initialGoals = [
+    const initialGoals = useCallback(() => [
         { id: 'career', title: 'Career: Become a T&O Surgeon', milestones: [] },
         { id: 'financial', title: 'Financial: Become a Millionaire', milestones: [] },
         { id: 'spiritual', title: 'Spiritual: Become a Hafiz', milestones: [] },
         { id: 'personal', title: 'Personal: Master Self-Defence', milestones: [] },
-    ];
+    ], []);
 
-    // Initialize goals if they don't exist
+    const [goals, setGoals] = useState(initialGoals);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [currentGoal, setCurrentGoal] = useState(null);
+    
+    const goalsCollection = collection(db, 'artifacts', appId, 'users', userId, 'goals');
+    
     useEffect(() => {
         if (!userId) return;
         const initGoals = async () => {
-            for (const goal of initialGoals) {
+            const initialGoalData = initialGoals();
+            for (const goal of initialGoalData) {
                 const goalRef = doc(db, 'artifacts', appId, 'users', userId, 'goals', goal.id);
                 const docSnap = await getDoc(goalRef);
                 if (!docSnap.exists()) {
@@ -392,8 +377,7 @@ function Goals({ userId }) {
 
         const unsubscribe = onSnapshot(goalsCollection, (snapshot) => {
             const fetchedGoals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            // Ensure order
-            const orderedGoals = initialGoals.map(ig => {
+            const orderedGoals = initialGoals().map(ig => {
                 const foundGoal = fetchedGoals.find(fg => fg.id === ig.id);
                 return foundGoal ? foundGoal : { ...ig, milestones: [] };
             });
@@ -401,7 +385,7 @@ function Goals({ userId }) {
         });
 
         return () => unsubscribe();
-    }, [userId]);
+    }, [userId, goalsCollection, initialGoals]);
 
     const handleAddMilestone = async (goalId, text) => {
         if (text.trim() === '') return;
@@ -529,7 +513,7 @@ function HabitTracker({ userId }) {
             setHabits(fetchedHabits);
         });
         return () => unsubscribe();
-    }, [userId]);
+    }, [userId, habitsCollection]);
 
     const handleAddHabit = async (e) => {
         e.preventDefault();
@@ -617,15 +601,15 @@ function HabitTracker({ userId }) {
 
 // --- 4. Journal Component ---
 function Journal({ userId }) {
-    const defaultQuestions = [
+    const defaultQuestions = useCallback(() => [
         "What was my biggest win today?",
         "What did I learn?",
         "How could I have made today better?",
         "What am I grateful for?"
-    ];
+    ], []);
 
     const [questions, setQuestions] = useState(defaultQuestions);
-    const [entry, setEntry] = useState(null);
+    const [, setEntry] = useState(null);
     const [responses, setResponses] = useState({});
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [allEntries, setAllEntries] = useState([]);
@@ -636,16 +620,14 @@ function Journal({ userId }) {
     useEffect(() => {
         if (!userId) return;
         
-        // Fetch questions
         const unsubQuestions = onSnapshot(journalSettingsRef, (docSnap) => {
             if (docSnap.exists() && docSnap.data().questions) {
                 setQuestions(docSnap.data().questions);
             } else {
-                setDoc(journalSettingsRef, { questions: defaultQuestions });
+                setDoc(journalSettingsRef, { questions: defaultQuestions() });
             }
         });
 
-        // Fetch all entries for export
         const unsubAllEntries = onSnapshot(entriesCollection, (snapshot) => {
             const fetchedEntries = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
             setAllEntries(fetchedEntries.sort((a, b) => new Date(b.date) - new Date(a.date)));
@@ -655,7 +637,7 @@ function Journal({ userId }) {
             unsubQuestions();
             unsubAllEntries();
         };
-    }, [userId]);
+    }, [userId, journalSettingsRef, entriesCollection, defaultQuestions]);
 
     useEffect(() => {
          if (!userId) return;
@@ -776,10 +758,10 @@ function KnowledgeVault({ userId }) {
                 fetchedNotes = fetchedNotes.filter(note => note.tags && note.tags.includes(filterTag));
             }
 
-            setNotes(fetchedNotes.sort((a,b) => b.createdAt.toDate() - a.createdAt.toDate()));
+            setNotes(fetchedNotes.sort((a,b) => (b.createdAt.toDate() || 0) - (a.createdAt.toDate() || 0)));
         });
         return () => unsubscribe();
-    }, [userId, filterTag]);
+    }, [userId, filterTag, notesCollection]);
 
     const handleAddNote = async (e) => {
         e.preventDefault();
@@ -893,7 +875,7 @@ function PomodoroTimer() {
     const [isActive, setIsActive] = useState(false);
     const [isBreak, setIsBreak] = useState(false);
 
-    const alarmSound = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
+    const alarmSound = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
 
     useEffect(() => {
         let interval = null;
@@ -908,18 +890,16 @@ function PomodoroTimer() {
                     alarmSound();
                     setIsActive(false);
                     if (isBreak) {
-                        // end of break
                         setIsBreak(false);
                         setMinutes(workMinutes);
                     } else {
-                        // end of work
                         setIsBreak(true);
                         setMinutes(breakMinutes);
                     }
                     setSeconds(0);
                 }
             }, 1000);
-        } else if (!isActive && (seconds !== 0 || minutes !== (isBreak ? breakMinutes : workMinutes) ) ) {
+        } else if (!isActive && seconds !== 0) {
             clearInterval(interval);
         }
         return () => clearInterval(interval);
@@ -936,13 +916,24 @@ function PomodoroTimer() {
 
     const handleWorkTimeChange = (e) => {
         const val = parseInt(e.target.value, 10);
-        if (!isNaN(val)) setWorkMinutes(val);
-        if(!isActive && !isBreak) setMinutes(val);
+        if (!isNaN(val)) {
+            setWorkMinutes(val);
+            if(!isActive && !isBreak) {
+                setMinutes(val);
+                setSeconds(0);
+            }
+        }
     }
+
      const handleBreakTimeChange = (e) => {
         const val = parseInt(e.target.value, 10);
-        if (!isNaN(val)) setBreakMinutes(val);
-        if(!isActive && isBreak) setMinutes(val);
+        if (!isNaN(val)) {
+            setBreakMinutes(val);
+            if(!isActive && isBreak) {
+                setMinutes(val);
+                setSeconds(0);
+            }
+        }
     }
 
     return (
@@ -979,12 +970,12 @@ function PomodoroTimer() {
 
 // --- 7. Settings View ---
 function SettingsView({ userId }) {
-    const defaultQuestions = [
+    const defaultQuestions = useCallback(() => [
         "What was my biggest win today?",
         "What did I learn?",
         "How could I have made today better?",
         "What am I grateful for?"
-    ];
+    ], []);
 
     const [questions, setQuestions] = useState([]);
     const journalSettingsRef = doc(db, 'artifacts', appId, 'users', userId, 'journalSettings', 'questions');
@@ -995,11 +986,11 @@ function SettingsView({ userId }) {
             if (docSnap.exists() && docSnap.data().questions) {
                 setQuestions(docSnap.data().questions);
             } else {
-                setQuestions(defaultQuestions);
+                setQuestions(defaultQuestions());
             }
         });
         return () => unsub();
-    }, [userId]);
+    }, [userId, journalSettingsRef, defaultQuestions]);
     
     const handleQuestionChange = (index, value) => {
         const newQuestions = [...questions];
@@ -1021,7 +1012,6 @@ function SettingsView({ userId }) {
         if (questionsToSave.length > 0) {
             await setDoc(journalSettingsRef, { questions: questionsToSave });
         } else {
-            // If all questions are removed, save an empty array
             await setDoc(journalSettingsRef, { questions: [] });
         }
     };
