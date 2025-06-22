@@ -37,7 +37,6 @@ export default function App() {
                 setIsAuthReady(true);
             } else {
                 try {
-                    // In the deployed app, we will always sign in anonymously.
                     await signInAnonymously(auth);
                 } catch (error) {
                     console.error("Anonymous Authentication Error:", error);
@@ -49,7 +48,7 @@ export default function App() {
 
     const renderView = () => {
         if (!isAuthReady || !userId) {
-            return <div className="flex items-center justify-center h-full"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-red-500"></div></div>;
+            return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-red-500"></div></div>;
         }
 
         switch (view) {
@@ -76,8 +75,7 @@ export default function App() {
 
     return (
         <div className="bg-gray-900 text-white font-sans flex flex-col md:flex-row min-h-screen">
-             {/* Sidebar Navigation */}
-            <aside className={`fixed top-0 left-0 h-full bg-gray-800 border-r border-gray-700 w-64 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30`}>
+             <aside className={`fixed top-0 left-0 h-full bg-gray-800 border-r border-gray-700 w-64 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30`}>
                 <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-gray-700">
                         <h1 className="text-xl font-bold text-white">Doctor's Life OS</h1>
@@ -97,7 +95,6 @@ export default function App() {
                 </div>
             </aside>
             
-            {/* Mobile Header */}
             <header className="md:hidden sticky top-0 bg-gray-800 p-4 z-20 flex justify-between items-center border-b border-gray-700">
                 <h1 className="text-lg font-bold">Doctor's Life OS</h1>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white">
@@ -105,7 +102,6 @@ export default function App() {
                 </button>
             </header>
 
-            {/* Main Content */}
             <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
                 {renderView()}
             </main>
@@ -113,28 +109,21 @@ export default function App() {
     );
 }
 
-// --- Sound Effect ---
+// --- Sound Effect Hook ---
 const useSound = (src) => {
     const soundRef = useRef(null);
-
     useEffect(() => {
-        if (typeof window !== 'undefined' && src) {
+        if (typeof Audio !== "undefined") {
             soundRef.current = new Audio(src);
             soundRef.current.volume = 0.5;
         }
     }, [src]);
-
-    const play = useCallback(() => {
-        if (soundRef.current) {
-            soundRef.current.currentTime = 0;
-            soundRef.current.play().catch(e => console.error("Sound play failed:", e));
-        }
+    return useCallback(() => {
+        soundRef.current?.play().catch(e => console.error("Sound play failed:", e));
     }, []);
-
-    return play;
 };
 
-// --- Helper: Modal Component ---
+// --- Modal Component ---
 const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
     return (
@@ -142,9 +131,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             <div className="bg-gray-800 rounded-lg shadow-xl w-full max-w-md m-auto">
                 <div className="flex justify-between items-center p-4 border-b border-gray-700">
                     <h3 className="text-lg font-bold text-white">{title}</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">
-                        <X size={20} />
-                    </button>
+                    <button onClick={onClose} className="text-gray-400 hover:text-white"><X size={20} /></button>
                 </div>
                 <div className="p-6">{children}</div>
             </div>
@@ -154,124 +141,79 @@ const Modal = ({ isOpen, onClose, title, children }) => {
 
 // --- 1. Dashboard Component ---
 function Dashboard({ userId }) {
-    const SHIFT_PATTERNS = [
-        { id: 'normalDay', label: 'Normal Day' },
-        { id: 'longDay', label: 'Long Day' },
-        { id: 'nightShift', label: 'Night Shift' },
-        { id: 'weekendShift', label: 'Weekend Shift' },
-        { id: 'zeroDay', label: 'Zero Day' },
-    ];
-    const TASK_CADENCES = ['Daily', 'Weekly', 'Bi-Weekly', 'Monthly'];
+    const SHIFT_PATTERNS = useMemo(() => [
+        { id: 'normalDay', label: 'Normal Day' }, { id: 'longDay', label: 'Long Day' }, { id: 'nightShift', label: 'Night Shift' },
+        { id: 'weekendShift', label: 'Weekend Shift' }, { id: 'zeroDay', label: 'Zero Day' },
+    ], []);
+    const TASK_CADENCES = useMemo(() => ['Daily', 'Weekly', 'Bi-Weekly', 'Monthly'], []);
 
     const [shift, setShift] = useState(SHIFT_PATTERNS[0].id);
     const [tasks, setTasks] = useState([]);
     const [newTaskText, setNewTaskText] = useState('');
     const [newTaskCadence, setNewTaskCadence] = useState('Daily');
     
-    const playPing = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
-
-    const tasksCollection = collection(db, 'artifacts', appId, 'users', userId, 'tasks');
+    const playPing = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg-");
+    const tasksCollectionRef = useRef(collection(db, 'artifacts', appId, 'users', userId, 'tasks'));
 
     useEffect(() => {
-       if (!userId) return;
+        if (!userId) return;
+
+        const tasksCollection = tasksCollectionRef.current;
         const resetTasks = async () => {
             const now = new Date();
-            const date = now.getDate();
-            const nowTime = now.getTime();
-
-            const allTasksQuery = query(collection(db, 'artifacts', appId, 'users', userId, 'tasks'));
+            const allTasksQuery = query(tasksCollection);
             const querySnapshot = await getDocs(allTasksQuery);
-            
             const batch = writeBatch(db);
             let needsUpdate = false;
-
             querySnapshot.forEach(docSnap => {
                 const task = docSnap.data();
                 const lastReset = task.lastReset ? task.lastReset.toDate() : new Date(0);
                 let shouldReset = false;
-                
                 const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
                 const lastResetStart = new Date(lastReset.getFullYear(), lastReset.getMonth(), lastReset.getDate()).getTime();
-
                 const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
-
                 switch (task.cadence) {
-                    case 'Daily':
-                        if (todayStart > lastResetStart) { shouldReset = true; }
-                        break;
-                    case 'Weekly':
-                        if (dayOfWeek === 1 && todayStart > lastResetStart) { shouldReset = true; }
-                        break;
-                     case 'Bi-Weekly':
-                        const diffTime = Math.abs(nowTime - lastReset.getTime());
+                    case 'Daily': if (todayStart > lastResetStart) shouldReset = true; break;
+                    case 'Weekly': if (dayOfWeek === 1 && todayStart > lastResetStart) shouldReset = true; break;
+                    case 'Bi-Weekly':
+                        const diffTime = Math.abs(now.getTime() - lastReset.getTime());
                         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                        if (dayOfWeek === 1 && diffDays >= 14) { shouldReset = true; }
+                        if (dayOfWeek === 1 && diffDays >= 14) shouldReset = true;
                         break;
-                    case 'Monthly':
-                         if (date === 1 && todayStart > lastResetStart) { shouldReset = true; }
-                        break;
-                    default:
-                        break;
+                    case 'Monthly': if (now.getDate() === 1 && todayStart > lastResetStart) shouldReset = true; break;
+                    default: break;
                 }
-
                 if (shouldReset && task.completed) {
-                    const taskRef = doc(db, 'artifacts', appId, 'users', userId, 'tasks', docSnap.id);
-                    batch.update(taskRef, { completed: false, lastReset: new Date() });
+                    batch.update(docSnap.ref, { completed: false, lastReset: new Date() });
                     needsUpdate = true;
                 }
             });
-
-            if (needsUpdate) {
-                await batch.commit();
-            }
+            if (needsUpdate) await batch.commit();
         };
-        
         resetTasks();
-
         const q = query(tasksCollection);
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedTasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setTasks(fetchedTasks);
+        const unsubscribe = onSnapshot(q, snapshot => {
+            setTasks(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         });
-
-        return () => unsubscribe();
-    }, [userId, tasksCollection]);
+        return unsubscribe;
+    }, [userId]);
 
     const handleAddTask = async (e) => {
         e.preventDefault();
         if (newTaskText.trim() === '') return;
-        try {
-            await addDoc(tasksCollection, {
-                text: newTaskText,
-                cadence: newTaskCadence,
-                shiftPattern: shift,
-                completed: false,
-                createdAt: new Date(),
-                lastReset: new Date(),
-            });
-            setNewTaskText('');
-        } catch (error) {
-            console.error("Error adding task: ", error);
-        }
+        await addDoc(tasksCollectionRef.current, { text: newTaskText, cadence: newTaskCadence, shiftPattern: shift, completed: false, createdAt: new Date(), lastReset: new Date() });
+        setNewTaskText('');
     };
 
     const handleToggleTask = async (task) => {
         playPing();
         const taskRef = doc(db, 'artifacts', appId, 'users', userId, 'tasks', task.id);
-        try {
-            await updateDoc(taskRef, { completed: !task.completed });
-        } catch (error) {
-            console.error("Error updating task: ", error);
-        }
+        await updateDoc(taskRef, { completed: !task.completed });
     };
 
     const handleDeleteTask = async (taskId) => {
         const taskRef = doc(db, 'artifacts', appId, 'users', userId, 'tasks', taskId);
-        try {
-            await deleteDoc(taskRef);
-        } catch (error) {
-            console.error("Error deleting task: ", error);
-        }
+        await deleteDoc(taskRef);
     };
 
     const filteredTasks = tasks.filter(task => task.shiftPattern === shift);
@@ -281,36 +223,17 @@ function Dashboard({ userId }) {
             <h2 className="text-3xl font-bold text-white mb-6">Dashboard</h2>
             <div className="mb-6">
                 <label htmlFor="shift-select" className="block text-sm font-medium text-gray-400 mb-2">Select Shift Pattern</label>
-                <select 
-                    id="shift-select" 
-                    value={shift} 
-                    onChange={(e) => setShift(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
+                <select id="shift-select" value={shift} onChange={(e) => setShift(e.target.value)} className="w-full bg-gray-800 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500">
                     {SHIFT_PATTERNS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
             </div>
-
             <form onSubmit={handleAddTask} className="mb-8 p-4 bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4">
-                <input
-                    type="text"
-                    value={newTaskText}
-                    onChange={(e) => setNewTaskText(e.target.value)}
-                    placeholder="Add a new task..."
-                    className="flex-grow bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-                 <select 
-                    value={newTaskCadence} 
-                    onChange={(e) => setNewTaskCadence(e.target.value)}
-                    className="bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
+                <input type="text" value={newTaskText} onChange={(e) => setNewTaskText(e.target.value)} placeholder="Add a new task..." className="flex-grow bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500" />
+                <select value={newTaskCadence} onChange={(e) => setNewTaskCadence(e.target.value)} className="bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500">
                     {TASK_CADENCES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                    <Plus size={18}/> Add Task
-                </button>
+                <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"><Plus size={18}/> Add Task</button>
             </form>
-
             {TASK_CADENCES.map(cadence => {
                 const cadenceTasks = filteredTasks.filter(t => t.cadence === cadence);
                 if (cadenceTasks.length === 0) return null;
@@ -326,9 +249,7 @@ function Dashboard({ userId }) {
                                         </div>
                                     </button>
                                     <span className={`flex-grow ${task.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}>{task.text}</span>
-                                    <button onClick={() => handleDeleteTask(task.id)} className="ml-4 text-gray-500 hover:text-red-500 transition-colors">
-                                        <Trash2 size={18} />
-                                    </button>
+                                    <button onClick={() => handleDeleteTask(task.id)} className="ml-4 text-gray-500 hover:text-red-500 transition-colors"><Trash2 size={18} /></button>
                                 </li>
                             ))}
                         </ul>
@@ -336,35 +257,30 @@ function Dashboard({ userId }) {
                 );
             })}
              {filteredTasks.length === 0 && (
-                <div className="text-center py-10 px-4 bg-gray-800 rounded-lg">
-                    <p className="text-gray-400">No tasks for this shift pattern.</p>
-                    <p className="text-gray-500 text-sm mt-2">Add a task above to get started.</p>
-                </div>
+                <div className="text-center py-10 px-4 bg-gray-800 rounded-lg"><p className="text-gray-400">No tasks for this shift pattern.</p><p className="text-gray-500 text-sm mt-2">Add a task above to get started.</p></div>
             )}
         </div>
     );
 }
 
-
 // --- 2. Goals & Milestones Component ---
 function Goals({ userId }) {
     const initialGoals = useCallback(() => [
-        { id: 'career', title: 'Career: Become a T&O Surgeon', milestones: [] },
-        { id: 'financial', title: 'Financial: Become a Millionaire', milestones: [] },
-        { id: 'spiritual', title: 'Spiritual: Become a Hafiz', milestones: [] },
-        { id: 'personal', title: 'Personal: Master Self-Defence', milestones: [] },
+        { id: 'career', title: 'Career: Become a T&O Surgeon', milestones: [] }, { id: 'financial', title: 'Financial: Become a Millionaire', milestones: [] },
+        { id: 'spiritual', title: 'Spiritual: Become a Hafiz', milestones: [] }, { id: 'personal', title: 'Personal: Master Self-Defence', milestones: [] },
     ], []);
 
-    const [goals, setGoals] = useState(initialGoals);
+    const [goals, setGoals] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentGoal, setCurrentGoal] = useState(null);
     
-    const goalsCollection = collection(db, 'artifacts', appId, 'users', userId, 'goals');
+    const goalsCollectionRef = useRef(collection(db, 'artifacts', appId, 'users', userId, 'goals'));
     
     useEffect(() => {
         if (!userId) return;
+        const goalsCollection = goalsCollectionRef.current;
+        const initialGoalData = initialGoals();
         const initGoals = async () => {
-            const initialGoalData = initialGoals();
             for (const goal of initialGoalData) {
                 const goalRef = doc(db, 'artifacts', appId, 'users', userId, 'goals', goal.id);
                 const docSnap = await getDoc(goalRef);
@@ -374,18 +290,16 @@ function Goals({ userId }) {
             }
         };
         initGoals();
-
         const unsubscribe = onSnapshot(goalsCollection, (snapshot) => {
             const fetchedGoals = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            const orderedGoals = initialGoals().map(ig => {
+            const orderedGoals = initialGoalData.map(ig => {
                 const foundGoal = fetchedGoals.find(fg => fg.id === ig.id);
                 return foundGoal ? foundGoal : { ...ig, milestones: [] };
             });
             setGoals(orderedGoals);
         });
-
-        return () => unsubscribe();
-    }, [userId, goalsCollection, initialGoals]);
+        return unsubscribe;
+    }, [userId, initialGoals]);
 
     const handleAddMilestone = async (goalId, text) => {
         if (text.trim() === '') return;
@@ -418,33 +332,19 @@ function Goals({ userId }) {
         setCurrentGoal(null);
     };
 
-    const openEditModal = (goal) => {
-        setCurrentGoal({ ...goal });
-        setIsModalOpen(true);
-    };
+    const openEditModal = (goal) => setCurrentGoal({ ...goal });
     
     const MilestoneItem = ({ goalId, milestone }) => {
         const statuses = ['Not Started', 'In Progress', 'Completed'];
-        const statusColors = {
-            'Not Started': 'bg-gray-600',
-            'In Progress': 'bg-yellow-500',
-            'Completed': 'bg-green-500',
-        };
-
+        const statusColors = {'Not Started': 'bg-gray-600', 'In Progress': 'bg-yellow-500', 'Completed': 'bg-green-500'};
         return (
             <li className="flex items-center justify-between p-3 bg-gray-700 rounded-md">
                 <span className="text-gray-300">{milestone.text}</span>
                 <div className="flex items-center gap-2">
-                    <select
-                        value={milestone.status}
-                        onChange={(e) => handleUpdateMilestoneStatus(goalId, milestone.id, e.target.value)}
-                        className={`text-xs text-white rounded px-2 py-1 border-none outline-none ${statusColors[milestone.status]}`}
-                    >
+                    <select value={milestone.status} onChange={(e) => handleUpdateMilestoneStatus(goalId, milestone.id, e.target.value)} className={`text-xs text-white rounded px-2 py-1 border-none outline-none ${statusColors[milestone.status]}`}>
                         {statuses.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
-                    <button onClick={() => handleDeleteMilestone(goalId, milestone.id)} className="text-gray-500 hover:text-red-500">
-                        <Trash2 size={16}/>
-                    </button>
+                    <button onClick={() => handleDeleteMilestone(goalId, milestone.id)} className="text-gray-500 hover:text-red-500"><Trash2 size={16}/></button>
                 </div>
             </li>
         );
@@ -463,15 +363,11 @@ function Goals({ userId }) {
                         <div key={goal.id} className="bg-gray-800 rounded-lg p-5 shadow-lg">
                             <div className="flex justify-between items-start mb-4">
                                <h3 className="text-xl font-semibold text-red-400 w-5/6">{goal.title}</h3>
-                                <button onClick={() => openEditModal(goal)} className="text-gray-400 hover:text-white"><Edit size={18} /></button>
+                                <button onClick={() => { openEditModal(goal); setIsModalOpen(true); }} className="text-gray-400 hover:text-white"><Edit size={18} /></button>
                             </div>
-                            <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4">
-                                <div className="bg-red-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
-                            </div>
+                            <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4"><div className="bg-red-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div></div>
                             <p className="text-sm text-gray-400 mb-4">{completedMilestones} of {totalMilestones} milestones completed.</p>
-                            <ul className="space-y-2 mb-4">
-                                {milestones.map(m => <MilestoneItem key={m.id} goalId={goal.id} milestone={m}/>)}
-                            </ul>
+                            <ul className="space-y-2 mb-4">{milestones.map(m => <MilestoneItem key={m.id} goalId={goal.id} milestone={m}/>)}</ul>
                             <form onSubmit={(e) => { e.preventDefault(); handleAddMilestone(goal.id, e.target.elements.milestone.value); e.target.elements.milestone.value = ''; }} className="flex gap-2">
                                 <input name="milestone" type="text" placeholder="New milestone..." className="flex-grow bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"/>
                                 <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold p-2 rounded-lg flex items-center justify-center transition-colors"><Plus size={20}/></button>
@@ -483,15 +379,8 @@ function Goals({ userId }) {
              <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Edit Goal Title">
                 {currentGoal && (
                     <form onSubmit={handleUpdateGoalTitle}>
-                        <input
-                            type="text"
-                            value={currentGoal.title}
-                            onChange={(e) => setCurrentGoal({ ...currentGoal, title: e.target.value })}
-                            className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 mb-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                        />
-                        <div className="flex justify-end">
-                            <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><Save size={18}/> Save</button>
-                        </div>
+                        <input type="text" value={currentGoal.title} onChange={(e) => setCurrentGoal({ ...currentGoal, title: e.target.value })} className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 mb-4 text-white focus:outline-none focus:ring-2 focus:ring-red-500"/>
+                        <div className="flex justify-end"><button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><Save size={18}/> Save</button></div>
                     </form>
                 )}
             </Modal>
@@ -499,53 +388,38 @@ function Goals({ userId }) {
     );
 }
 
-
 // --- 3. Habit Tracker Component ---
 function HabitTracker({ userId }) {
     const [habits, setHabits] = useState([]);
     const [newHabitText, setNewHabitText] = useState('');
-    const habitsCollection = collection(db, 'artifacts', appId, 'users', userId, 'habits');
+    const habitsCollectionRef = useRef(collection(db, 'artifacts', appId, 'users', userId, 'habits'));
 
     useEffect(() => {
         if (!userId) return;
+        const habitsCollection = habitsCollectionRef.current;
         const unsubscribe = onSnapshot(habitsCollection, (snapshot) => {
             const fetchedHabits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setHabits(fetchedHabits);
         });
-        return () => unsubscribe();
-    }, [userId, habitsCollection]);
+        return unsubscribe;
+    }, [userId]);
 
     const handleAddHabit = async (e) => {
         e.preventDefault();
         if (newHabitText.trim() === '') return;
-        await addDoc(habitsCollection, {
-            text: newHabitText,
-            streak: 0,
-            lastCompleted: null,
-            createdAt: new Date(),
-        });
+        await addDoc(habitsCollectionRef.current, { text: newHabitText, streak: 0, lastCompleted: null, createdAt: new Date() });
         setNewHabitText('');
     };
 
     const handleToggleHabit = async (habit) => {
         const today = new Date().toISOString().split('T')[0];
         const habitRef = doc(db, 'artifacts', appId, 'users', userId, 'habits', habit.id);
-        
         if (habit.lastCompleted === today) return;
-
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().split('T')[0];
-        
-        let newStreak = 1;
-        if (habit.lastCompleted === yesterdayStr) {
-            newStreak = (habit.streak || 0) + 1;
-        }
-
-        await updateDoc(habitRef, {
-            lastCompleted: today,
-            streak: newStreak,
-        });
+        let newStreak = (habit.lastCompleted === yesterdayStr) ? (habit.streak || 0) + 1 : 1;
+        await updateDoc(habitRef, { lastCompleted: today, streak: newStreak });
     };
     
     const handleDeleteHabit = async (habitId) => {
@@ -556,43 +430,25 @@ function HabitTracker({ userId }) {
         <div>
             <h2 className="text-3xl font-bold text-white mb-6">Habit Tracker</h2>
             <form onSubmit={handleAddHabit} className="mb-8 p-4 bg-gray-800 rounded-lg flex flex-col sm:flex-row gap-4">
-                <input
-                    type="text"
-                    value={newHabitText}
-                    onChange={(e) => setNewHabitText(e.target.value)}
-                    placeholder="Add a new habit to track..."
-                    className="flex-grow bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
-                <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                    <Plus size={18}/> Add Habit
-                </button>
+                <input type="text" value={newHabitText} onChange={(e) => setNewHabitText(e.target.value)} placeholder="Add a new habit to track..." className="flex-grow bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"/>
+                <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors"><Plus size={18}/> Add Habit</button>
             </form>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {habits.map(habit => {
-                    const today = new Date().toISOString().split('T')[0];
-                    const isCompletedToday = habit.lastCompleted === today;
+                    const isCompletedToday = habit.lastCompleted === new Date().toISOString().split('T')[0];
                     return (
                         <div key={habit.id} className="bg-gray-800 p-4 rounded-lg flex flex-col justify-between items-center shadow-lg">
-                             <button onClick={() => handleDeleteHabit(habit.id)} className="self-end text-gray-500 hover:text-red-500 transition-colors">
-                                <Trash2 size={16} />
-                            </button>
+                            <button onClick={() => handleDeleteHabit(habit.id)} className="self-end text-gray-500 hover:text-red-500 transition-colors"><Trash2 size={16} /></button>
                             <p className="text-center text-gray-300 mb-4 h-14">{habit.text}</p>
                             <button onClick={() => handleToggleHabit(habit)} disabled={isCompletedToday} className={`w-16 h-16 rounded-full flex items-center justify-center border-4 transition-all ${isCompletedToday ? 'bg-green-500 border-green-400 cursor-not-allowed' : 'bg-gray-700 border-gray-600 hover:border-red-500'}`}>
                                 {isCompletedToday ? <Check size={32} /> : <div className="w-4 h-4 rounded-full bg-gray-500"></div>}
                             </button>
-                            <div className="mt-4 text-center">
-                                <p className="text-2xl font-bold text-red-400">{habit.streak || 0}</p>
-                                <p className="text-sm text-gray-400">Day Streak</p>
-                            </div>
+                            <div className="mt-4 text-center"><p className="text-2xl font-bold text-red-400">{habit.streak || 0}</p><p className="text-sm text-gray-400">Day Streak</p></div>
                         </div>
                     );
                 })}
                  {habits.length === 0 && (
-                    <div className="col-span-full text-center py-10 px-4 bg-gray-800 rounded-lg">
-                        <p className="text-gray-400">No habits yet.</p>
-                        <p className="text-gray-500 text-sm mt-2">Add a habit above to start building streaks.</p>
-                    </div>
+                    <div className="col-span-full text-center py-10 px-4 bg-gray-800 rounded-lg"><p className="text-gray-400">No habits yet.</p><p className="text-gray-500 text-sm mt-2">Add a habit above to start building streaks.</p></div>
                 )}
             </div>
         </div>
@@ -601,83 +457,56 @@ function HabitTracker({ userId }) {
 
 // --- 4. Journal Component ---
 function Journal({ userId }) {
-    const defaultQuestions = useCallback(() => [
-        "What was my biggest win today?",
-        "What did I learn?",
-        "How could I have made today better?",
-        "What am I grateful for?"
-    ], []);
+    const defaultQuestions = useCallback(() => ["What was my biggest win today?", "What did I learn?", "How could I have made today better?", "What am I grateful for?"], []);
 
-    const [questions, setQuestions] = useState(defaultQuestions);
-    const [, setEntry] = useState(null);
+    const [questions, setQuestions] = useState(defaultQuestions());
     const [responses, setResponses] = useState({});
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
     const [allEntries, setAllEntries] = useState([]);
 
-    const journalSettingsRef = doc(db, 'artifacts', appId, 'users', userId, 'journalSettings', 'questions');
-    const entriesCollection = collection(db, 'artifacts', appId, 'users', userId, 'journalEntries');
+    const journalSettingsRef = useRef(doc(db, 'artifacts', appId, 'users', userId, 'journalSettings', 'questions'));
+    const entriesCollectionRef = useRef(collection(db, 'artifacts', appId, 'users', userId, 'journalEntries'));
 
     useEffect(() => {
         if (!userId) return;
-        
-        const unsubQuestions = onSnapshot(journalSettingsRef, (docSnap) => {
+        const unsubQuestions = onSnapshot(journalSettingsRef.current, (docSnap) => {
             if (docSnap.exists() && docSnap.data().questions) {
                 setQuestions(docSnap.data().questions);
             } else {
-                setDoc(journalSettingsRef, { questions: defaultQuestions() });
+                setDoc(journalSettingsRef.current, { questions: defaultQuestions() });
             }
         });
-
-        const unsubAllEntries = onSnapshot(entriesCollection, (snapshot) => {
+        const unsubAllEntries = onSnapshot(entriesCollectionRef.current, (snapshot) => {
             const fetchedEntries = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
             setAllEntries(fetchedEntries.sort((a, b) => new Date(b.date) - new Date(a.date)));
         });
-
-        return () => {
-            unsubQuestions();
-            unsubAllEntries();
-        };
-    }, [userId, journalSettingsRef, entriesCollection, defaultQuestions]);
+        return () => { unsubQuestions(); unsubAllEntries(); };
+    }, [userId, defaultQuestions]);
 
     useEffect(() => {
          if (!userId) return;
         const entryRef = doc(db, 'artifacts', appId, 'users', userId, 'journalEntries', selectedDate);
         const unsubscribe = onSnapshot(entryRef, (docSnap) => {
+            const initialResponses = {};
             if (docSnap.exists()) {
                 const data = docSnap.data();
-                setEntry(data);
-                const initialResponses = {};
-                questions.forEach(q => initialResponses[q] = data.responses[q] || '');
-                setResponses(initialResponses);
+                questions.forEach(q => { initialResponses[q] = data.responses[q] || '' });
             } else {
-                setEntry(null);
-                const initialResponses = {};
-                questions.forEach(q => initialResponses[q] = '');
-                setResponses(initialResponses);
+                questions.forEach(q => { initialResponses[q] = '' });
             }
+            setResponses(initialResponses);
         });
-        return () => unsubscribe();
+        return unsubscribe;
     }, [userId, selectedDate, questions]);
     
-    const handleResponseChange = (question, answer) => {
-        setResponses(prev => ({ ...prev, [question]: answer }));
-    };
-
-    const handleSaveEntry = async () => {
-        const entryRef = doc(db, 'artifacts', appId, 'users', userId, 'journalEntries', selectedDate);
-        await setDoc(entryRef, {
-            date: selectedDate,
-            responses: responses
-        }, { merge: true });
-    };
+    const handleResponseChange = (question, answer) => setResponses(prev => ({ ...prev, [question]: answer }));
+    const handleSaveEntry = async () => await setDoc(doc(db, 'artifacts', appId, 'users', userId, 'journalEntries', selectedDate), { date: selectedDate, responses }, { merge: true });
 
     const exportToCSV = () => {
         if(allEntries.length === 0) return;
-
         const allQuestions = [...new Set(allEntries.flatMap(entry => Object.keys(entry.responses || {})))];
         const headers = ['date', ...allQuestions];
         const csvRows = [headers.join(',')];
-
         allEntries.forEach(entry => {
             const values = [entry.date];
             allQuestions.forEach(header => {
@@ -686,13 +515,10 @@ function Journal({ userId }) {
             });
             csvRows.push(values.join(','));
         });
-
         const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'journal_export.csv');
-        link.style.visibility = 'hidden';
+        link.href = URL.createObjectURL(blob);
+        link.download = 'journal_export.csv';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -703,15 +529,8 @@ function Journal({ userId }) {
             <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
                 <h2 className="text-3xl font-bold text-white">Journal</h2>
                 <div className="flex items-center gap-4">
-                    <input 
-                        type="date"
-                        value={selectedDate}
-                        onChange={e => setSelectedDate(e.target.value)}
-                        className="bg-gray-800 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
-                     <button onClick={exportToCSV} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                        <FileDown size={18}/> Export All (CSV)
-                    </button>
+                    <input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} className="bg-gray-800 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"/>
+                    <button onClick={exportToCSV} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><FileDown size={18}/> Export All (CSV)</button>
                 </div>
             </div>
             <div className="bg-gray-800 p-6 rounded-lg">
@@ -720,20 +539,11 @@ function Journal({ userId }) {
                     {questions.map((q, index) => (
                         <div key={index}>
                             <label className="block text-md font-medium text-red-400 mb-2">{q}</label>
-                            <textarea
-                                value={responses[q] || ''}
-                                onChange={(e) => handleResponseChange(q, e.target.value)}
-                                rows="4"
-                                className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                            ></textarea>
+                            <textarea value={responses[q] || ''} onChange={(e) => handleResponseChange(q, e.target.value)} rows="4" className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
                         </div>
                     ))}
                 </div>
-                <div className="mt-6 text-right">
-                    <button onClick={handleSaveEntry} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors float-right">
-                        <Save size={18}/> Save Entry
-                    </button>
-                </div>
+                <div className="mt-6 text-right"><button onClick={handleSaveEntry} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors float-right"><Save size={18}/> Save Entry</button></div>
             </div>
         </div>
     );
@@ -746,39 +556,32 @@ function KnowledgeVault({ userId }) {
     const [newNoteTags, setNewNoteTags] = useState('');
     const [filterTag, setFilterTag] = useState('');
     
-    const notesCollection = collection(db, 'artifacts', appId, 'users', userId, 'notes');
+    const notesCollectionRef = useRef(collection(db, 'artifacts', appId, 'users', userId, 'notes'));
     
     useEffect(() => {
         if (!userId) return;
-        let q = query(notesCollection);
+        const notesCollection = notesCollectionRef.current;
+        const q = query(notesCollection);
         const unsubscribe = onSnapshot(q, (snapshot) => {
             let fetchedNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
             if (filterTag) {
                 fetchedNotes = fetchedNotes.filter(note => note.tags && note.tags.includes(filterTag));
             }
-
-            setNotes(fetchedNotes.sort((a,b) => (b.createdAt.toDate() || 0) - (a.createdAt.toDate() || 0)));
+            setNotes(fetchedNotes.sort((a,b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0)));
         });
-        return () => unsubscribe();
-    }, [userId, filterTag, notesCollection]);
+        return unsubscribe;
+    }, [userId, filterTag]);
 
     const handleAddNote = async (e) => {
         e.preventDefault();
         if (newNoteContent.trim() === '') return;
         const tagsArray = newNoteTags.split(',').map(t => t.trim().replace(/#/g, '')).filter(Boolean);
-        await addDoc(notesCollection, {
-            content: newNoteContent,
-            tags: tagsArray,
-            createdAt: new Date(),
-        });
+        await addDoc(notesCollectionRef.current, { content: newNoteContent, tags: tagsArray, createdAt: new Date() });
         setNewNoteContent('');
         setNewNoteTags('');
     };
 
-    const handleDeleteNote = async (noteId) => {
-        await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'notes', noteId));
-    };
+    const handleDeleteNote = async (noteId) => await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'notes', noteId));
 
     const allTags = [...new Set(notes.flatMap(n => n.tags || []))];
 
@@ -786,21 +589,14 @@ function KnowledgeVault({ userId }) {
         if(notes.length === 0) return;
         const headers = ['content', 'tags', 'createdAt'];
         const csvRows = [headers.join(',')];
-        
         notes.forEach(note => {
-            const values = [
-                `"${note.content.replace(/"/g, '""')}"`,
-                `"${(note.tags || []).join(', ')}"`,
-                note.createdAt.toDate().toISOString()
-            ];
+            const values = [`"${note.content.replace(/"/g, '""')}"`, `"${(note.tags || []).join(', ')}"`, note.createdAt.toDate().toISOString()];
             csvRows.push(values.join(','));
         });
-
         const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
         const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'knowledge_vault_export.csv');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'knowledge_vault_export.csv';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -812,23 +608,9 @@ function KnowledgeVault({ userId }) {
             <div className="bg-gray-800 p-6 rounded-lg mb-8">
                 <h3 className="text-xl font-semibold text-red-400 mb-4">Add a New Note</h3>
                 <form onSubmit={handleAddNote} className="space-y-4">
-                     <textarea
-                        value={newNoteContent}
-                        onChange={(e) => setNewNoteContent(e.target.value)}
-                        placeholder="Capture an idea or information..."
-                        rows="4"
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    ></textarea>
-                     <input
-                        type="text"
-                        value={newNoteTags}
-                        onChange={(e) => setNewNoteTags(e.target.value)}
-                        placeholder="Tags (comma-separated, e.g., Surgery, Business)"
-                        className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    />
-                    <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                        <Save size={18}/> Add Note
-                    </button>
+                     <textarea value={newNoteContent} onChange={(e) => setNewNoteContent(e.target.value)} placeholder="Capture an idea or information..." rows="4" className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+                     <input type="text" value={newNoteTags} onChange={(e) => setNewNoteTags(e.target.value)} placeholder="Tags (comma-separated, e.g., Surgery, Business)" className="w-full bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-gray-300 focus:outline-none focus:ring-2 focus:ring-red-500"/>
+                    <button type="submit" className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><Save size={18}/> Add Note</button>
                 </form>
             </div>
              <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
@@ -839,27 +621,20 @@ function KnowledgeVault({ userId }) {
                         {allTags.map(tag => <option key={tag} value={tag}>{tag}</option>)}
                     </select>
                 </div>
-                <button onClick={exportToCSV} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                    <FileDown size={18}/> Export All (CSV)
-                </button>
+                <button onClick={exportToCSV} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><FileDown size={18}/> Export All (CSV)</button>
             </div>
             <div className="space-y-4">
                 {notes.map(note => (
                     <div key={note.id} className="bg-gray-800 p-4 rounded-lg shadow">
                         <p className="text-gray-300 mb-3 whitespace-pre-wrap">{note.content}</p>
                         <div className="flex justify-between items-end">
-                            <div className="flex flex-wrap gap-2">
-                                {(note.tags || []).map(tag => <span key={tag} className="text-xs bg-red-900 text-red-300 px-2 py-1 rounded-full">{tag}</span>)}
-                            </div>
+                            <div className="flex flex-wrap gap-2">{(note.tags || []).map(tag => <span key={tag} className="text-xs bg-red-900 text-red-300 px-2 py-1 rounded-full">{tag}</span>)}</div>
                             <button onClick={() => handleDeleteNote(note.id)} className="text-gray-500 hover:text-red-500"><Trash2 size={16}/></button>
                         </div>
                     </div>
                 ))}
                 {notes.length === 0 && (
-                    <div className="text-center py-10 px-4 bg-gray-800 rounded-lg">
-                        <p className="text-gray-400">{filterTag ? `No notes with the tag "${filterTag}".` : 'Your vault is empty.'}</p>
-                         <p className="text-gray-500 text-sm mt-2">Add a note above to start building your second brain.</p>
-                    </div>
+                    <div className="text-center py-10 px-4 bg-gray-800 rounded-lg"><p className="text-gray-400">{filterTag ? `No notes with the tag "${filterTag}".` : 'Your vault is empty.'}</p><p className="text-gray-500 text-sm mt-2">Add a note above to start building your second brain.</p></div>
                 )}
             </div>
         </div>
@@ -874,17 +649,15 @@ function PomodoroTimer() {
     const [seconds, setSeconds] = useState(0);
     const [isActive, setIsActive] = useState(false);
     const [isBreak, setIsBreak] = useState(false);
-
-    const alarmSound = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
+    const alarmSound = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
 
     useEffect(() => {
         let interval = null;
         if (isActive) {
             interval = setInterval(() => {
-                if (seconds > 0) {
-                    setSeconds(seconds - 1);
-                } else if (minutes > 0) {
-                    setMinutes(minutes - 1);
+                if (seconds > 0) setSeconds(s => s - 1);
+                else if (minutes > 0) {
+                    setMinutes(m => m - 1);
                     setSeconds(59);
                 } else {
                     alarmSound();
@@ -899,8 +672,6 @@ function PomodoroTimer() {
                     setSeconds(0);
                 }
             }, 1000);
-        } else if (!isActive && seconds !== 0) {
-            clearInterval(interval);
         }
         return () => clearInterval(interval);
     }, [isActive, seconds, minutes, isBreak, workMinutes, breakMinutes, alarmSound]);
@@ -970,27 +741,22 @@ function PomodoroTimer() {
 
 // --- 7. Settings View ---
 function SettingsView({ userId }) {
-    const defaultQuestions = useCallback(() => [
-        "What was my biggest win today?",
-        "What did I learn?",
-        "How could I have made today better?",
-        "What am I grateful for?"
-    ], []);
+    const defaultQuestions = useCallback(() => ["What was my biggest win today?", "What did I learn?", "How could I have made today better?", "What am I grateful for?"], []);
 
     const [questions, setQuestions] = useState([]);
-    const journalSettingsRef = doc(db, 'artifacts', appId, 'users', userId, 'journalSettings', 'questions');
+    const journalSettingsRef = useRef(doc(db, 'artifacts', appId, 'users', userId, 'journalSettings', 'questions'));
 
     useEffect(() => {
         if (!userId) return;
-        const unsub = onSnapshot(journalSettingsRef, (docSnap) => {
-            if (docSnap.exists() && docSnap.data().questions) {
+        const unsub = onSnapshot(journalSettingsRef.current, (docSnap) => {
+            if (docSnap.exists() && docSnap.data().questions && docSnap.data().questions.length > 0) {
                 setQuestions(docSnap.data().questions);
             } else {
                 setQuestions(defaultQuestions());
             }
         });
-        return () => unsub();
-    }, [userId, journalSettingsRef, defaultQuestions]);
+        return unsub;
+    }, [userId, defaultQuestions]);
     
     const handleQuestionChange = (index, value) => {
         const newQuestions = [...questions];
@@ -998,22 +764,12 @@ function SettingsView({ userId }) {
         setQuestions(newQuestions);
     };
 
-    const handleAddQuestion = () => {
-        setQuestions([...questions, '']);
-    };
-
-    const handleRemoveQuestion = (index) => {
-        const newQuestions = questions.filter((_, i) => i !== index);
-        setQuestions(newQuestions);
-    };
+    const handleAddQuestion = () => setQuestions([...questions, '']);
+    const handleRemoveQuestion = (index) => setQuestions(questions.filter((_, i) => i !== index));
 
     const handleSaveChanges = async () => {
         const questionsToSave = questions.filter(q => q && q.trim() !== '');
-        if (questionsToSave.length > 0) {
-            await setDoc(journalSettingsRef, { questions: questionsToSave });
-        } else {
-            await setDoc(journalSettingsRef, { questions: [] });
-        }
+        await setDoc(journalSettingsRef.current, { questions: questionsToSave });
     };
 
     return (
@@ -1024,25 +780,14 @@ function SettingsView({ userId }) {
                  <div className="space-y-4">
                      {questions.map((q, index) => (
                          <div key={index} className="flex items-center gap-2">
-                             <input 
-                                 type="text"
-                                 value={q}
-                                 onChange={(e) => handleQuestionChange(index, e.target.value)}
-                                 className="flex-grow bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"
-                             />
-                              <button onClick={() => handleRemoveQuestion(index)} className="text-gray-500 hover:text-red-500 p-2">
-                                <Trash2 size={18} />
-                            </button>
+                             <input type="text" value={q} onChange={(e) => handleQuestionChange(index, e.target.value)} className="flex-grow bg-gray-700 border border-gray-600 rounded-lg py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-red-500"/>
+                              <button onClick={() => handleRemoveQuestion(index)} className="text-gray-500 hover:text-red-500 p-2"><Trash2 size={18} /></button>
                          </div>
                      ))}
                  </div>
                  <div className="mt-6 flex justify-between">
-                     <button onClick={handleAddQuestion} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                        <Plus size={18}/> Add Question
-                    </button>
-                     <button onClick={handleSaveChanges} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
-                        <Save size={18}/> Save Changes
-                    </button>
+                     <button onClick={handleAddQuestion} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><Plus size={18}/> Add Question</button>
+                     <button onClick={handleSaveChanges} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 transition-colors"><Save size={18}/> Save Changes</button>
                  </div>
             </div>
              <div className="bg-gray-800 p-6 rounded-lg mt-8">
