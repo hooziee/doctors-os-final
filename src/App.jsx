@@ -5,21 +5,17 @@ import { getFirestore, collection, doc, onSnapshot, addDoc, updateDoc, deleteDoc
 import { Target, BrainCircuit, BookOpen, Edit, Trash2, Plus, X, Check, Save, FileDown, Play, Pause, RotateCcw, TrendingUp, Menu, Settings } from 'lucide-react';
 
 // --- Firebase Configuration ---
-// VITAL STEP: Replace the placeholder values below with your *actual* Firebase config keys.
-// You can find these keys in your Firebase project settings.
-// 1. Go to your Firebase project: https://console.firebase.google.com/
-// 2. Click the gear icon ⚙️ > Project settings.
-// 3. In the "General" tab, scroll down to the "Your apps" card.
-// 4. Find the `firebaseConfig` object and copy the entire object here.
+// Securely loaded from environment variables (your .env.local file)
 const firebaseConfig = {
-  apiKey: "AIzaSyCycH-7M8-gVS3frGL_NRyU74nFkQ8tnjw",
-  authDomain: "polymath-os-app.firebaseapp.com",
-  projectId: "polymath-os-app",
-  storageBucket: "polymath-os-app.firebasestorage.app",
-  messagingSenderId: "630169596916",
-  appId: "1:630169596916:web:e6cb20d7dfef1f95693fa1"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -39,22 +35,28 @@ export default function App() {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 setUserId(user.uid);
-                setIsAuthReady(true);
             } else {
                 try {
                     await signInAnonymously(auth);
                 } catch (error) {
-                    // This error will trigger if the API keys above are incorrect.
+                    // This error will trigger if the environment variables are incorrect or missing.
                     console.error("Anonymous Authentication Error:", error);
+                    // You could show an error message to the user here
                 }
             }
+            setIsAuthReady(true);
         });
         return () => unsubscribe();
     }, []);
 
     const renderView = () => {
-        if (!isAuthReady || !userId) {
+        if (!isAuthReady) {
             return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-red-500"></div></div>;
+        }
+
+        // Wait for userId to be set before rendering components that need it
+        if (!userId) {
+             return <div className="flex items-center justify-center h-screen bg-gray-900"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div><p className="ml-4">Authenticating...</p></div>;
         }
 
         switch (view) {
@@ -81,7 +83,7 @@ export default function App() {
 
     return (
         <div className="bg-gray-900 text-white font-sans flex flex-col md:flex-row min-h-screen">
-             <aside className={`fixed top-0 left-0 h-full bg-gray-800 border-r border-gray-700 w-64 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30`}>
+            <aside className={`fixed top-0 left-0 h-full bg-gray-800 border-r border-gray-700 w-64 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out z-30`}>
                 <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-gray-700">
                         <h1 className="text-xl font-bold text-white">Doctor's Life OS</h1>
@@ -158,7 +160,7 @@ function Dashboard({ userId }) {
     const [newTaskText, setNewTaskText] = useState('');
     const [newTaskCadence, setNewTaskCadence] = useState('Daily');
     
-    const playPing = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
+    const playPing = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4");
     const tasksCollectionRef = useRef(collection(db, 'artifacts', appId, 'users', userId, 'tasks'));
 
     useEffect(() => {
@@ -338,7 +340,10 @@ function Goals({ userId }) {
         setCurrentGoal(null);
     };
 
-    const openEditModal = (goal) => setCurrentGoal({ ...goal });
+    const openEditModal = (goal) => {
+      setCurrentGoal({ ...goal });
+      setIsModalOpen(true);
+    }
     
     const MilestoneItem = ({ goalId, milestone }) => {
         const statuses = ['Not Started', 'In Progress', 'Completed'];
@@ -348,7 +353,7 @@ function Goals({ userId }) {
                 <span className="text-gray-300">{milestone.text}</span>
                 <div className="flex items-center gap-2">
                     <select value={milestone.status} onChange={(e) => handleUpdateMilestoneStatus(goalId, milestone.id, e.target.value)} className={`text-xs text-white rounded px-2 py-1 border-none outline-none ${statusColors[milestone.status]}`}>
-                        {statuses.map(s => <option key={s} value={s}>{s}</option>)}
+                        {statuses.map(s => <option key={s} value={s} style={{backgroundColor: '#4A5568'}}>{s}</option>)}
                     </select>
                     <button onClick={() => handleDeleteMilestone(goalId, milestone.id)} className="text-gray-500 hover:text-red-500"><Trash2 size={16}/></button>
                 </div>
@@ -369,7 +374,7 @@ function Goals({ userId }) {
                         <div key={goal.id} className="bg-gray-800 rounded-lg p-5 shadow-lg">
                             <div className="flex justify-between items-start mb-4">
                                <h3 className="text-xl font-semibold text-red-400 w-5/6">{goal.title}</h3>
-                                <button onClick={() => { openEditModal(goal); setIsModalOpen(true); }} className="text-gray-400 hover:text-white"><Edit size={18} /></button>
+                                <button onClick={() => openEditModal(goal)} className="text-gray-400 hover:text-white"><Edit size={18} /></button>
                             </div>
                             <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4"><div className="bg-red-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div></div>
                             <p className="text-sm text-gray-400 mb-4">{completedMilestones} of {totalMilestones} milestones completed.</p>
@@ -403,7 +408,7 @@ function HabitTracker({ userId }) {
     useEffect(() => {
         if (!userId) return;
         const habitsCollection = habitsCollectionRef.current;
-        const unsubscribe = onSnapshot(habitsCollection, (snapshot) => {
+        const unsubscribe = onSnapshot(query(habitsCollection), (snapshot) => {
             const fetchedHabits = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setHabits(fetchedHabits);
         });
@@ -482,7 +487,7 @@ function Journal({ userId }) {
                 setDoc(journalSettingsRef.current, { questions: defaultQuestions() });
             }
         });
-        const unsubAllEntries = onSnapshot(entriesCollectionRef.current, (snapshot) => {
+        const unsubAllEntries = onSnapshot(query(entriesCollectionRef.current), (snapshot) => {
             const fetchedEntries = snapshot.docs.map(d => ({id: d.id, ...d.data()}));
             setAllEntries(fetchedEntries.sort((a, b) => new Date(b.date) - new Date(a.date)));
         });
@@ -490,7 +495,7 @@ function Journal({ userId }) {
     }, [userId, defaultQuestions]);
 
     useEffect(() => {
-         if (!userId) return;
+        if (!userId) return;
         const entryRef = doc(db, 'artifacts', appId, 'users', userId, 'journalEntries', selectedDate);
         const unsubscribe = onSnapshot(entryRef, (docSnap) => {
             const initialResponses = {};
@@ -566,15 +571,23 @@ function KnowledgeVault({ userId }) {
     
     useEffect(() => {
         if (!userId) return;
-        const notesCollection = notesCollectionRef.current;
-        const q = query(notesCollection);
-        const unsubscribe = onSnapshot(q, (snapshot) => {
+        
+        let notesQuery = query(notesCollectionRef.current);
+
+        // This part is inefficient. Firestore queries should be used to filter.
+        // For now, we'll keep the client-side filtering to match the original code.
+        const unsubscribe = onSnapshot(notesQuery, (snapshot) => {
             let fetchedNotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Client-side filtering
             if (filterTag) {
                 fetchedNotes = fetchedNotes.filter(note => note.tags && note.tags.includes(filterTag));
             }
+
+            // Client-side sorting
             setNotes(fetchedNotes.sort((a,b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0)));
         });
+
         return unsubscribe;
     }, [userId, filterTag]);
 
@@ -592,11 +605,13 @@ function KnowledgeVault({ userId }) {
     const allTags = [...new Set(notes.flatMap(n => n.tags || []))];
 
     const exportToCSV = () => {
-        if(notes.length === 0) return;
+        const notesToExport = notes; // Already filtered
+        if(notesToExport.length === 0) return;
         const headers = ['content', 'tags', 'createdAt'];
         const csvRows = [headers.join(',')];
-        notes.forEach(note => {
-            const values = [`"${note.content.replace(/"/g, '""')}"`, `"${(note.tags || []).join(', ')}"`, note.createdAt.toDate().toISOString()];
+        notesToExport.forEach(note => {
+            const createdAt = note.createdAt?.toDate() ? note.createdAt.toDate().toISOString() : 'N/A';
+            const values = [`"${(note.content || '').replace(/"/g, '""')}"`, `"${(note.tags || []).join(', ')}"`, createdAt];
             csvRows.push(values.join(','));
         });
         const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
@@ -655,7 +670,7 @@ function PomodoroTimer() {
     const [seconds, setSeconds] = useState(0);
     const [isActive, setIsActive] = useState(false);
     const [isBreak, setIsBreak] = useState(false);
-    const alarmSound = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
+    const alarmSound = useSound("data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YVhvT18AAAAAA//u/eL0Pj9/AEEDDAcMDw8QDw8PDgQODxAFDg8QDAwMDAcDDgcABg4MAA0ODQ8CDQ4PDwINDA8ACA0MDwQLDA8PDgINAw8DBQ0PDgYLDQ8PDgIMDg8CDQ0PDgMMDg8QDw8PDQ8PDg8ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0ODQ4NDg0PDQ8ODQ4NDg0ODQ4NDg0ODQ4PDg8ODQ4ODg4PDg8ODg4PDg8PDg4PDg4PDg4ODg4ODg4ODg4ODg4ODg4ODg4PDg8ODg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4PDg4PDg4ODg4PDg8ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4-");
 
     useEffect(() => {
         let interval = null;
